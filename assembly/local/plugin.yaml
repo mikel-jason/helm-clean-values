@@ -1,0 +1,3 @@
+name: "local"
+version: "0.1.0"
+command: "$HELM_PLUGIN_DIR/run.sh"

@@ -1,0 +1,7 @@
+version: '3'
+
+includes:
+  local: 
+    taskfile: ./assembly/local/Taskfile.yaml
+    vars:
+      INJECT_HELM_PLUGINS: ./assembly/
