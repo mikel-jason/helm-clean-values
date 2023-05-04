@@ -1,8 +1,12 @@
 version: '3'
 
 tasks:
-  nginx:
+  run:
+    desc: run as helm plugin directly from go code
+    # examples:
+    #   task local:run -- simple --chart bitnami/nginx --file ./testdata/bitnami.nginx.yaml
+    #   task local:run -- simple --chart bitnami/nginx --stdin < <(cat ./testdata/bitnami.nginx.yaml)
     env:
       HELM_PLUGINS: "{{ .INJECT_HELM_PLUGINS }}"
     cmds:
-      - cat ./testdata/bitnami.nginx.yaml | helm local {{ .CLI_ARGS }}
+      - helm local {{ .CLI_ARGS }}
