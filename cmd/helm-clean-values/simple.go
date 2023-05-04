@@ -15,10 +15,20 @@ var simpleCmd = &cli.Command{
 	Name:  "simple",
 	Usage: "detect unused helm values by comparing with the chart's default values",
 	Flags: []cli.Flag{
+		&cli.BoolFlag{
+			Name:  "stdin",
+			Usage: "read input values from STDIN",
+		},
 		&cli.StringFlag{
 			Name:  "chart",
 			Usage: "helm prompt to get the chart",
 		},
+	},
+	Before: func(cCtx *cli.Context) error {
+		if !cCtx.Bool("stdin") {
+			return fmt.Errorf("no input values provided")
+		}
+		return nil
 	},
 	Action: func(cCtx *cli.Context) (err error) {
 
