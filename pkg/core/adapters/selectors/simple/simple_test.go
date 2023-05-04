@@ -1,12 +1,14 @@
-package core
+package simple_test
 
 import (
 	"testing"
 
+	"github.com/sarcaustech/helm-clean-values/pkg/core"
+	"github.com/sarcaustech/helm-clean-values/pkg/core/adapters/selectors/simple"
 	"github.com/stretchr/testify/require"
 )
 
-func TestMask(t *testing.T) {
+func TestValues(t *testing.T) {
 	tests := []struct {
 		name      string
 		input     map[string]interface{}
@@ -106,8 +108,12 @@ func TestMask(t *testing.T) {
 	}
 
 	require := require.New(t)
+	selector := simple.Selector{}
 	for _, test := range tests {
-		result := Mask(test.input, test.reference)
-		require.Equalf(test.expected, result, test.name)
+		result, err := selector.Run(test.input, test.reference)
+		require.Nilf(err, test.name)
+		clean, err := core.Populate(result)
+		require.Nilf(err, test.name)
+		require.Equalf(test.expected, clean, test.name)
 	}
 }

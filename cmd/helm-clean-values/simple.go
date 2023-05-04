@@ -2,11 +2,11 @@ package main
 
 import (
 	"fmt"
-	"io"
-	"os"
-	"os/exec"
 
 	"github.com/sarcaustech/helm-clean-values/pkg/core"
+	"github.com/sarcaustech/helm-clean-values/pkg/core/adapters/providers/helm"
+	"github.com/sarcaustech/helm-clean-values/pkg/core/adapters/providers/stdin"
+	"github.com/sarcaustech/helm-clean-values/pkg/core/adapters/selectors/simple"
 	"github.com/urfave/cli/v2"
 	"gopkg.in/yaml.v3"
 )
@@ -22,30 +22,18 @@ var simpleCmd = &cli.Command{
 	},
 	Action: func(cCtx *cli.Context) (err error) {
 
-		stdinBytes, err := io.ReadAll(os.Stdin)
+		inputProvider := stdin.ValuesProvider{}
+		referenceProvider := helm.ValuesProvider{
+			BinaryPath: cCtx.String("helm-bin"),
+			Prompt:     cCtx.String("chart"),
+		}
+		selector := simple.Selector{}
+
+		cleanedValues, err := core.Run(&inputProvider, &referenceProvider, &selector)
 		if err != nil {
-			return fmt.Errorf("cannot read stdin: %w", err)
+			return err
 		}
-		var values map[string]interface{}
-		if err = yaml.Unmarshal(stdinBytes, &values); err != nil {
-			return fmt.Errorf("cannot parse stdin to YAML: %w", err)
-		}
-
-		chartPrompt := cCtx.String("chart")
-
-		cmd := exec.Command(cCtx.String("helm-bin"), "show", "values", chartPrompt)
-		defaultValuesBytes, err := cmd.Output()
-		if err != nil {
-			return fmt.Errorf("helm show values %s failed: %w", chartPrompt, err)
-		}
-
-		var defaultValues map[string]interface{}
-		if err = yaml.Unmarshal(defaultValuesBytes, &defaultValues); err != nil {
-			return fmt.Errorf("cannot parse stdin to YAML: %w", err)
-		}
-
-		masked := core.Mask(values, defaultValues)
-		bytes, err := yaml.Marshal(masked)
+		bytes, err := yaml.Marshal(cleanedValues)
 		if err != nil {
 			return err
 		}
