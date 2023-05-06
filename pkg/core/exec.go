@@ -22,6 +22,8 @@ func Run(
 		return nil, fmt.Errorf("error during value selections: %w", err)
 	}
 
+	checkKeepFromChilds(&selects)
+
 	cleanValues, err := Populate(selects)
 	if err != nil {
 		return nil, err
@@ -59,4 +61,23 @@ func populate(input SelectResult) interface{} {
 		}
 	}
 	return res
+}
+
+// checkKeepFromChilds traverses a SelectResult tree and ensures that no node it not kept that has a (nested) child to be kept
+func checkKeepFromChilds(input *SelectResult) {
+	if input.Keep {
+		return
+	}
+
+	if len(input.Childs) == 0 {
+		return
+	}
+
+	for _, child := range input.Childs {
+		checkKeepFromChilds(&child)
+		if child.Keep {
+			input.Keep = true
+			return
+		}
+	}
 }
