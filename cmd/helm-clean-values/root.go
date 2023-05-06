@@ -24,6 +24,7 @@ var app = &cli.App{
 		},
 	},
 	Commands: []*cli.Command{
+		mutateCmd,
 		simpleCmd,
 		statusCmd,
 	},
