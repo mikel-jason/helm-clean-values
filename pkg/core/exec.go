@@ -50,7 +50,7 @@ func populate(input SelectResult) interface{} {
 	}
 
 	if len(input.Childs) == 0 {
-		return input.InputValue
+		return input.Value
 	}
 
 	res := make(map[string]interface{})

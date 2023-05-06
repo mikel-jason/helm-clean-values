@@ -11,15 +11,15 @@ type ValueSelector interface {
 type SelectResult struct {
 	LocalIdentifier string
 	FullIdentifier  []string
-	InputValue      interface{}
-	ReferenceValue  interface{}
+	Value           interface{}
 	Keep            bool
 	Reason          int
 	Childs          []SelectResult
 }
 
 const (
-	ReasonTypeMatch = iota
+	ReasonUndefined = iota // default int value 0 -> implicitly set
+	ReasonTypeMatch
 	ReasonTypeMismatch
 	ReasonDoesNotExistOnReference
 	ReasonEmpty
