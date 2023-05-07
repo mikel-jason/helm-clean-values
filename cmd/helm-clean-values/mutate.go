@@ -19,7 +19,7 @@ var mutateCmd = &cli.Command{
 This decides if a value is valid or not by testing if a change of the value
 changes the template or not. If provides values match the chart's default
 values, it will still be marked as relevant because the mutated value still
-causes a different template result. This is accepted since engineers get 
+causes a different template result. This is accepted since engineers get
 the correct impression that the provided data is in place.
 
 Note: The compute time significantly increases with a growing set of values.

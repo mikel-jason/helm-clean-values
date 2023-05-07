@@ -7,6 +7,7 @@ import (
 	"os/exec"
 	"reflect"
 	"strconv"
+	"strings"
 
 	"github.com/sarcaustech/helm-clean-values/pkg/core"
 	"golang.org/x/exp/slog"
@@ -101,14 +102,19 @@ func (m *mutateResult) decide(s *Selector) core.SelectResult {
 			panic(err)
 		}
 
-		setValueByPath(mutatedMap, m.Path, mutatePrimitive)
-
-		result, err := s.template(mutatedMap)
+		err = setValueByPath(mutatedMap, m.Path, mutatePrimitive)
 		if err != nil {
-			panic(err)
+			slog.Error("cannot mutate primitive in user values, skipping and assuming as relevant",
+				"path", strings.Join(m.Path, "."))
+		} else {
+			result, err := s.template(mutatedMap)
+			if err != nil {
+				panic(err)
+			}
+
+			res.Keep = !bytes.Equal(result, s.originalResult)
 		}
 
-		res.Keep = !bytes.Equal(result, s.originalResult)
 	}
 
 	/*

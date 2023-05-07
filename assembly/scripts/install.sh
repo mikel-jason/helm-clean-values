@@ -4,7 +4,7 @@ set -eo pipefail
 
 pushd "$HELM_PLUGIN_DIR"
 
-version="$(cat plugin.yaml | grep "version" | cut -d '"' -f 2)"
+version="$(grep "version" plugin.yaml | cut -d '"' -f 2)"
 
 uname="linux"
 arch="amd64"
@@ -21,7 +21,6 @@ echo "Downloading ${url} to ./releases/${version}.tar.gz ($1)"
 
 curl -sSL "${url}" -o "./releases/${version}.tar.gz"
 tar xzf "./releases/${version}.tar.gz" -C "./releases/${version}"
-
 
 mv "./releases/${version}/helm-clean-values" "./bin/"
 
