@@ -1,0 +1,13 @@
+name: "actions"
+version: "v0.0.1"
+command: "$HELM_PLUGIN_DIR/bin/helm-clean-values"
+platformCommand:
+  - os: linux
+    arch: amd64
+    command: "$HELM_PLUGIN_DIR/helm-clean-values_linux_amd64_v1/helm-clean-values"
+  - os: darwin
+    arch: amd64
+    command: "$HELM_PLUGIN_DIR/helm-clean-values_darwin_amd64_v1/helm-clean-values"
+  - os: windows
+    arch: amd64
+    command: "$HELM_PLUGIN_DIR\\helm-clean-values_windows_amd64_v1\\helm-clean-values.exe"
