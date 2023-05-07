@@ -1,0 +1,41 @@
+name: test-latest
+
+on:
+  workflow_dispatch:
+  release:
+    type: [published]
+  schedule:
+    - cron: '0 14 1,15 * *'
+
+jobs:
+  latest:
+    strategy:
+      fail-fast: false # don't cancel other runs if one fails
+      matrix:
+        runner: [ubuntu-latest, windows-latest, macOS-latest]
+    runs-on: ${{ matrix.runner }}
+    steps:
+
+    - name: Install helm
+      uses: azure/setup-helm@v3
+      with:
+        version: v3.11.3
+
+    - name: Install plugin
+      run: |
+        helm plugin install https://github.com/sarcaustech/helm-clean-values
+        helm plugin list
+
+    - name: Checkout repo # needed to load test data
+      uses: actions/checkout@v3
+
+    - name: Run smoke test
+      run: |
+        helm env
+        helm clean-values --version
+
+    - name: Run nginx test
+      run: |
+        helm repo add bitnami https://charts.bitnami.com/bitnami
+        helm clean-values simple --chart bitnami/nginx -f ./testdata/bitnami.nginx.yaml
+        helm clean-values mutate --chart bitnami/nginx -f ./testdata/bitnami.nginx.yaml
