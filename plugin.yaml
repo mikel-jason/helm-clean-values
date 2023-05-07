@@ -1,5 +1,5 @@
 name: "clean-values"
-version: "0.0.1-alpha.2"
+version: "0.0.1-alpha.3"
 command: "$HELM_PLUGIN_DIR/bin/helm-clean-values"
 hooks:
   install: "cd $HELM_PLUGIN_DIR; assembly/scripts/install.sh"
