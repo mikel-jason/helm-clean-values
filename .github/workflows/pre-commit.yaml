@@ -1,0 +1,26 @@
+name: pre-commit
+
+on:
+  workflow_dispatch :
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  main:
+    name: pre-commit
+    runs-on: ubuntu-latest
+    steps:
+
+    - name: Checkout repo
+      uses: actions/checkout@v3
+
+    - name: Install pre-commit prerequisites
+      uses: asdf-vm/actions/install@v2
+
+    - name: Install Python
+      uses: actions/setup-python@v3
+
+    - name: Run pre-commit
+      uses: pre-commit/action@v3.0.0
