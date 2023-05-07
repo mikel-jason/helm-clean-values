@@ -2,26 +2,39 @@
 
 set -eo pipefail
 
-pushd "$HELM_PLUGIN_DIR"
+scriptDir=$(dirname "$0")
+source "${scriptDir}/shlib.sh"
+
+log_set_priority "${LOG_PRIO:-6}"
+
+pushd "$HELM_PLUGIN_DIR" >/dev/null
 
 version="$(grep "version" plugin.yaml | cut -d '"' -f 2)"
 
-uname="linux"
-arch="amd64"
+os=$(uname_os)
+arch=$(uname_arch)
+
+log_info "Installing helm-clean-values version v${version} for ${os} (${arch})"
 
 mkdir -p "bin"
 mkdir -p "releases/${version}"
 
-url="https://github.com/sarcaustech/helm-clean-values/releases/download/v${version}/helm-clean-values_${version}_${uname}_${arch}.tar.gz"
+url="https://github.com/sarcaustech/helm-clean-values/releases/download/v${version}/helm-clean-values_${version}_${os}_${arch}.tar.gz"
 
-ls -l
-ls -l releases
+fileDir="./releases"
+fileName="${version}.tar.gz"
+filePath="${fileDir}/${fileName}"
 
-echo "Downloading ${url} to ./releases/${version}.tar.gz ($1)"
+http_download "${filePath}" "${url}"
+(cd "${fileDir}" && untar "${fileName}")
 
-curl -sSL "${url}" -o "./releases/${version}.tar.gz"
-tar xzf "./releases/${version}.tar.gz" -C "./releases/${version}"
+binName="helm-clean-values"
+if [ "${os}" == "windows" ]; then
+	binName="${binName}.exe"
+fi
 
-mv "./releases/${version}/helm-clean-values" "./bin/"
+log_debug "expected binary file name: ${binName}"
 
-popd
+mv "${fileDir}/${binName}" "./bin/"
+
+popd >/dev/null
