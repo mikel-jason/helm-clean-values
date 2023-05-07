@@ -1,0 +1,74 @@
+name: test-cross-compiling
+
+on:
+  workflow_dispatch:
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+
+    - name: Checkout repo
+      uses: actions/checkout@v3
+
+    - name: Crop tool instals
+      run: |
+        grep 'go' .tool-versions > .tool-versions2
+        grep -v golangci-lint .tool-versions2 > .tool-versions
+
+    - name: Install pre-commit prerequisites
+      uses: asdf-vm/actions/install@v2
+
+    - name: Build with goreleaser
+      run: goreleaser release --clean --snapshot
+
+    - name: Upload binaries
+      uses: actions/upload-artifact@v3
+      with:
+        name: binaries
+        path: dist/helm-clean-values_*_amd64_v1/
+
+  run-compiled:
+    needs: [build]
+    strategy:
+      fail-fast: false # don't cancel other runs if one fails
+      matrix:
+        runner: [ubuntu-latest, windows-latest, macOS-latest]
+    runs-on: ${{ matrix.runner }}
+    steps:
+
+    - name: Checkout repo
+      uses: actions/checkout@v3
+
+    - name: Download binaries
+      uses: actions/download-artifact@v3
+      with:
+        name: binaries
+        path: ./assembly/actions
+
+    - name: Make binaries executable
+      if: runner.os == 'Linux' || runner.os == 'macOS'
+      run: |
+        chmod -R +x ./assembly/actions/*/helm-clean-values
+
+    - name: Install helm
+      uses: azure/setup-helm@v3
+      with:
+        version: v3.11.3
+
+    - name: Run smoke test
+      env:
+        HELM_PLUGINS: "${{ github.workspace }}/assembly"
+      run: |
+        helm env
+        helm actions --version
+
+    - name: Run nginx test
+      env:
+        HELM_PLUGINS: "${{ github.workspace }}/assembly"
+      run: |
+        helm repo add bitnami https://charts.bitnami.com/bitnami
+        helm actions simple --chart bitnami/nginx -f ./testdata/bitnami.nginx.yaml
+        helm actions mutate --chart bitnami/nginx -f ./testdata/bitnami.nginx.yaml
