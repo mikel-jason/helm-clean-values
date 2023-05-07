@@ -1,16 +1,20 @@
 package main
 
 import (
+	"fmt"
 	"log"
 	"os"
 
 	"github.com/urfave/cli/v2"
 )
 
+var version, commit, date string // filled by goreleaser
+
 var app = &cli.App{
 	Name:                 "helm-clean-values",
 	Usage:                "identify unused helm values",
 	EnableBashCompletion: true,
+	Version:              fmt.Sprintf("%s (%s), %s", version, commit, date),
 	Flags: []cli.Flag{
 		// https://helm.sh/docs/topics/plugins/#environment-variables
 		&cli.StringFlag{

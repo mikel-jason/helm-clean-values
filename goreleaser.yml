@@ -4,6 +4,11 @@ before:
 builds:
   - binary: helm-clean-values
     main: ./cmd/helm-clean-values
+    ldflags:
+      - "-s -w -extldflags '-static'"
+      - "-X main.version={{ .Version }}"
+      - "-X main.commit={{ .Commit }}"
+      - "-X main.date={{ .CommitDate }}"
     env:
       - CGO_ENABLED=0
     goos:
