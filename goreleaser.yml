@@ -19,3 +19,16 @@ builds:
       - amd64
       - arm64
       - "386"
+changelog:
+  groups:
+    - title: Breaking change
+      regexp: '^.*([[:word:]]+)(\([[:word:]]+\))??!:.+$'
+      order: 0
+    - title: Features
+      regexp: '^.*?feat(\([[:word:]]+\))??!?:.+$'
+      order: 1
+    - title: 'Bug fixes'
+      regexp: '^.*fix(\([[:word:]]+\))??!?:.+$'
+      order: 2
+    - title: 'Other'
+      order: 999
