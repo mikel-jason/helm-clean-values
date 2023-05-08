@@ -2,9 +2,10 @@ package main
 
 import (
 	"errors"
+	"fmt"
 
+	"github.com/sarcaustech/helm-clean-values/pkg/logger"
 	"github.com/urfave/cli/v2"
-	"golang.org/x/exp/slog"
 )
 
 var statusCmd = &cli.Command{
@@ -12,36 +13,21 @@ var statusCmd = &cli.Command{
 	Hidden: true,
 	Action: func(cCtx *cli.Context) error {
 
-		var required = slog.Bool("required", true)
-		var optional = slog.Bool("required", false)
-
 		requirementsMet := true
 
+		logger := logger.Plain{}
+
 		if val := cCtx.String("helm-bin"); val != "" {
-			slog.Info(
-				"helm binary path set",
-				slog.String("value", val),
-				required,
-			)
+			logger.Info(fmt.Sprintf("(required) helm binary path set: %s", val))
 		} else {
-			slog.Error(
-				"helm binary not path set",
-				slog.String("value", val),
-				required,
-			)
+			logger.Error("(required) helm binary missing")
 			requirementsMet = false
 		}
 
 		if val := cCtx.Bool("debug"); val {
-			slog.Info(
-				"debug logs enabled",
-				optional,
-			)
+			logger.Info("(optional) debug logs enabled")
 		} else {
-			slog.Info(
-				"debug logs disabled",
-				optional,
-			)
+			logger.Info("(optional) debug logs disabled")
 		}
 
 		if !requirementsMet {

@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os/exec"
 
+	"github.com/sarcaustech/helm-clean-values/pkg/core"
 	"gopkg.in/yaml.v3"
 )
 
@@ -12,7 +13,7 @@ type ValuesProvider struct {
 	BinaryPath string
 }
 
-func (p *ValuesProvider) Values() (map[string]interface{}, error) {
+func (p *ValuesProvider) Values(core.Logger) (map[string]interface{}, error) {
 	cmd := exec.Command(p.BinaryPath, "show", "values", p.Prompt)
 	valuesBytes, err := cmd.Output()
 	if err != nil {

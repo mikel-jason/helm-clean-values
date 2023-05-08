@@ -5,12 +5,13 @@ import (
 	"io"
 	"os"
 
+	"github.com/sarcaustech/helm-clean-values/pkg/core"
 	"gopkg.in/yaml.v3"
 )
 
 type ValuesProvider struct{}
 
-func (p *ValuesProvider) Values() (map[string]interface{}, error) {
+func (p *ValuesProvider) Values(core.Logger) (map[string]interface{}, error) {
 	valuesBytes, err := io.ReadAll(os.Stdin)
 	if err != nil {
 		return nil, fmt.Errorf("cannot read stdin: %w", err)

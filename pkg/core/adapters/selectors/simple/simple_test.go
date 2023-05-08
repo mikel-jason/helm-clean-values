@@ -5,6 +5,7 @@ import (
 
 	"github.com/sarcaustech/helm-clean-values/pkg/core"
 	"github.com/sarcaustech/helm-clean-values/pkg/core/adapters/selectors/simple"
+	"github.com/sarcaustech/helm-clean-values/pkg/logger"
 	"github.com/stretchr/testify/require"
 )
 
@@ -109,8 +110,9 @@ func TestValues(t *testing.T) {
 
 	require := require.New(t)
 	selector := simple.Selector{}
+	logger := &logger.Plain{EnableDebug: true}
 	for _, test := range tests {
-		result, err := selector.Run(test.input, test.reference)
+		result, err := selector.Run(logger, test.input, test.reference)
 		require.Nilf(err, test.name)
 		clean, err := core.Populate(result)
 		require.Nilf(err, test.name)

@@ -8,6 +8,7 @@ import (
 	"github.com/sarcaustech/helm-clean-values/pkg/core/adapters/providers/helm"
 	"github.com/sarcaustech/helm-clean-values/pkg/core/adapters/providers/stdin"
 	"github.com/sarcaustech/helm-clean-values/pkg/core/adapters/selectors/mutate"
+	"github.com/sarcaustech/helm-clean-values/pkg/logger"
 	"github.com/urfave/cli/v2"
 	"gopkg.in/yaml.v3"
 )
@@ -62,6 +63,10 @@ Note: The compute time significantly increases with a growing set of values.
 	},
 	Action: func(cCtx *cli.Context) (err error) {
 
+		logger := &logger.Plain{
+			EnableDebug: cCtx.Bool("debug"),
+		}
+
 		var inputProvider core.ValuesProvider
 		switch simpleInputMethod {
 		case "stdin":
@@ -83,7 +88,7 @@ Note: The compute time significantly increases with a growing set of values.
 			Prompt:         cCtx.String("chart"),
 		}
 
-		cleanedValues, err := core.Run(inputProvider, referenceProvider, selector)
+		cleanedValues, err := core.Run(logger, inputProvider, referenceProvider, selector)
 		if err != nil {
 			return err
 		}

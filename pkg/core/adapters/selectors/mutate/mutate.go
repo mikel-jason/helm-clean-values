@@ -21,12 +21,12 @@ type Selector struct {
 	bytesDeepCopy  []byte // the input yaml as bytes for re-parsing as deep copy
 }
 
-func (s *Selector) Run(input, reference map[string]interface{}) (core.SelectResult, error) {
+func (s *Selector) Run(logger core.Logger, input, reference map[string]interface{}) (core.SelectResult, error) {
 
 	var err error
 	s.originalResult, err = s.template(input)
 	if err != nil {
-		return core.SelectResult{}, fmt.Errorf("error templating with user data: %w", err)
+		return core.SelectResult{}, fmt.Errorf("error templating with original user data: %w", err)
 	}
 
 	s.bytesDeepCopy, err = yaml.Marshal(input)
@@ -34,11 +34,11 @@ func (s *Selector) Run(input, reference map[string]interface{}) (core.SelectResu
 		panic(err) // string -> typed -> string should always succeed
 	}
 
-	prep := s.prepare(mutateResult{
+	prep := s.prepare(logger, mutateResult{
 		Remaining: input,
 	})
 
-	return prep.decide(s), nil
+	return prep.decide(logger, s), nil
 }
 
 func (s *Selector) template(values map[string]interface{}) ([]byte, error) {
@@ -78,7 +78,7 @@ type mutateResult struct {
 	Keep      bool
 }
 
-func (m *mutateResult) decide(s *Selector) core.SelectResult {
+func (m *mutateResult) decide(logger core.Logger, s *Selector) core.SelectResult {
 	res := core.SelectResult{
 		LocalIdentifier: m.Local,
 		FullIdentifier:  m.Path,
@@ -87,7 +87,7 @@ func (m *mutateResult) decide(s *Selector) core.SelectResult {
 	}
 
 	for _, c := range m.Childs {
-		childRes := c.decide(s)
+		childRes := c.decide(logger, s)
 		res.Childs = append(res.Childs, childRes)
 
 		if childRes.Keep {
@@ -102,7 +102,7 @@ func (m *mutateResult) decide(s *Selector) core.SelectResult {
 			panic(err)
 		}
 
-		err = setValueByPath(mutatedMap, m.Path, mutatePrimitive)
+		err = setValueByPath(logger, mutatedMap, m.Path, mutatePrimitive)
 		if err != nil {
 			slog.Error("cannot mutate primitive in user values, skipping and assuming as relevant",
 				"path", strings.Join(m.Path, "."))
@@ -129,13 +129,14 @@ func (m *mutateResult) decide(s *Selector) core.SelectResult {
 	return res
 }
 
-func (s *Selector) prepare(input mutateResult) mutateResult {
+func (s *Selector) prepare(logger core.Logger, input mutateResult) mutateResult {
 	remainingKind := reflect.ValueOf(input.Remaining).Kind()
 
 	switch remainingKind {
 	case reflect.Map:
+		logger.Debug(fmt.Sprintf("found map, id: %s", strings.Join(input.Path, ".")))
 		for key, value := range input.Remaining.(map[string]interface{}) {
-			childResult := s.prepare(mutateResult{
+			childResult := s.prepare(logger, mutateResult{
 				Local:     key,
 				Path:      append(input.Path, key),
 				Remaining: value,
@@ -144,15 +145,16 @@ func (s *Selector) prepare(input mutateResult) mutateResult {
 			input.Childs = append(input.Childs, childResult)
 		}
 	case reflect.Slice:
-		slog.Warn("handling slice not implemented")
+		logger.Warn(fmt.Sprintf("found list which is not supported yet, id: %s", strings.Join(input.Path, ".")))
 		return input
 	default:
+		logger.Debug(fmt.Sprintf("found primitive, id: %s", strings.Join(input.Path, ".")))
 		return input
 	}
 	return input
 }
 
-func mutatePrimitive(input interface{}) interface{} {
+func mutatePrimitive(logger core.Logger, input interface{}) interface{} {
 	switch reflect.ValueOf(input).Kind() {
 	case reflect.String:
 		return input.(string) + "a"
@@ -161,12 +163,12 @@ func mutatePrimitive(input interface{}) interface{} {
 	case reflect.Int:
 		return input.(int) + 1
 	default:
-		slog.Warn("unknown kind, replacing with nil", "input", input)
+		logger.Info(fmt.Sprintf("unknown kind, replacing with nil, value: %v", input))
 		return nil
 	}
 }
 
-func setValueByPath(data interface{}, path []string, op func(value interface{}) interface{}) error {
+func setValueByPath(logger core.Logger, data interface{}, path []string, op func(core.Logger, interface{}) interface{}) error {
 	if len(path) == 0 {
 		return nil
 	}
@@ -192,7 +194,7 @@ func setValueByPath(data interface{}, path []string, op func(value interface{}) 
 	lastField := path[len(path)-1]
 
 	if typedData, ok := data.(map[string]interface{}); ok {
-		typedData[lastField] = op(typedData[lastField])
+		typedData[lastField] = op(logger, typedData[lastField])
 	} else if typedData, ok := data.([]interface{}); ok {
 		idx, err := strconv.Atoi(lastField)
 		if err != nil {
@@ -201,7 +203,7 @@ func setValueByPath(data interface{}, path []string, op func(value interface{}) 
 		if !ok || idx >= len(typedData) {
 			return fmt.Errorf("path not found: %s", lastField)
 		}
-		typedData[idx] = op(typedData[idx])
+		typedData[idx] = op(logger, typedData[idx])
 	} else {
 		return fmt.Errorf("invalid YAML data type")
 	}

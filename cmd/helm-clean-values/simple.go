@@ -8,6 +8,7 @@ import (
 	"github.com/sarcaustech/helm-clean-values/pkg/core/adapters/providers/helm"
 	"github.com/sarcaustech/helm-clean-values/pkg/core/adapters/providers/stdin"
 	"github.com/sarcaustech/helm-clean-values/pkg/core/adapters/selectors/simple"
+	"github.com/sarcaustech/helm-clean-values/pkg/logger"
 	"github.com/urfave/cli/v2"
 	"gopkg.in/yaml.v3"
 )
@@ -55,6 +56,10 @@ var simpleCmd = &cli.Command{
 	},
 	Action: func(cCtx *cli.Context) (err error) {
 
+		logger := &logger.Plain{
+			EnableDebug: cCtx.Bool("debug"),
+		}
+
 		var inputProvider core.ValuesProvider
 		switch simpleInputMethod {
 		case "stdin":
@@ -73,7 +78,7 @@ var simpleCmd = &cli.Command{
 		}
 		selector := &simple.Selector{}
 
-		cleanedValues, err := core.Run(inputProvider, referenceProvider, selector)
+		cleanedValues, err := core.Run(logger, inputProvider, referenceProvider, selector)
 		if err != nil {
 			return err
 		}

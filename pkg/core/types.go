@@ -1,11 +1,11 @@
 package core
 
 type ValuesProvider interface {
-	Values() (map[string]interface{}, error)
+	Values(Logger) (map[string]interface{}, error)
 }
 
 type ValueSelector interface {
-	Run(input, reference map[string]interface{}) (SelectResult, error)
+	Run(Logger, map[string]interface{}, map[string]interface{}) (SelectResult, error)
 }
 
 type SelectResult struct {
@@ -15,6 +15,13 @@ type SelectResult struct {
 	Keep            bool
 	Reason          int
 	Childs          []SelectResult
+}
+
+type Logger interface {
+	Error(string)
+	Warn(string)
+	Info(string)
+	Debug(string)
 }
 
 const (

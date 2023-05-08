@@ -2,27 +2,29 @@ package core
 
 import (
 	"fmt"
+	"strings"
 )
 
 func Run(
+	logger Logger,
 	inputProvider ValuesProvider,
 	referenceProvider ValuesProvider,
 	selector ValueSelector) (map[string]interface{}, error) {
-	input, err := inputProvider.Values()
+	input, err := inputProvider.Values(logger)
 	if err != nil {
 		return nil, fmt.Errorf("cannot get input values: %w", err)
 	}
-	reference, err := referenceProvider.Values()
+	reference, err := referenceProvider.Values(logger)
 	if err != nil {
 		return nil, fmt.Errorf("cannot get reference values: %w", err)
 	}
 
-	selects, err := selector.Run(input, reference)
+	selects, err := selector.Run(logger, input, reference)
 	if err != nil {
 		return nil, fmt.Errorf("error during value selections: %w", err)
 	}
 
-	checkKeepFromChilds(&selects)
+	checkKeepFromChilds(logger, &selects)
 
 	cleanValues, err := Populate(selects)
 	if err != nil {
@@ -64,7 +66,7 @@ func populate(input SelectResult) interface{} {
 }
 
 // checkKeepFromChilds traverses a SelectResult tree and ensures that no node it not kept that has a (nested) child to be kept
-func checkKeepFromChilds(input *SelectResult) {
+func checkKeepFromChilds(logger Logger, input *SelectResult) {
 	if input.Keep {
 		return
 	}
@@ -74,8 +76,9 @@ func checkKeepFromChilds(input *SelectResult) {
 	}
 
 	for _, child := range input.Childs {
-		checkKeepFromChilds(&child)
+		checkKeepFromChilds(logger, &child)
 		if child.Keep {
+			logger.Debug(fmt.Sprintf("keeping %s because at least on child has to be kept", strings.Join(input.FullIdentifier, ".")))
 			input.Keep = true
 			return
 		}
