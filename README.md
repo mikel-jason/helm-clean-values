@@ -3,7 +3,7 @@
 
   <h1 style="border-bottom:none!important">helm clean-values</h1>
 
-  <p>To all <i>the YAML is self-explaning</i> people</p>
+  <p>To all <i>"the YAML is self-explanatory"</i> people</p>
 
   <p>
     <a href="https://github.com/sarcaustech/helm-clean-values/actions/workflows/test-latest.yaml">
