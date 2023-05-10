@@ -120,7 +120,7 @@ func (m *mutateResult) decide(logger core.Logger, s *Selector) core.SelectResult
 	/*
 		TODO
 		built-in assumption:
-		a map is not needed if none of its childs are needed, but charts could loop maps and ignore
+		maps and lists are not needed if none of its childs are needed, but charts could loop and ignore
 		the values, so keys only can be relevant, too.
 
 		implement this edge case
@@ -145,8 +145,16 @@ func (s *Selector) prepare(logger core.Logger, input mutateResult) mutateResult 
 			input.Childs = append(input.Childs, childResult)
 		}
 	case reflect.Slice:
-		logger.Warn(fmt.Sprintf("found list which is not supported yet, id: %s", strings.Join(input.Path, ".")))
-		return input
+		logger.Debug(fmt.Sprintf("found list, id: %s", strings.Join(input.Path, ".")))
+		for keyInt, value := range input.Remaining.([]interface{}) {
+			key := strconv.Itoa(keyInt)
+			childResult := s.prepare(logger, mutateResult{
+				Local:     key,
+				Path:      append(input.Path, key),
+				Remaining: value,
+			})
+			input.Childs = append(input.Childs, childResult)
+		}
 	default:
 		logger.Debug(fmt.Sprintf("found primitive, id: %s", strings.Join(input.Path, ".")))
 		return input

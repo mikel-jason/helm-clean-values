@@ -2,6 +2,7 @@ package core
 
 import (
 	"fmt"
+	"strconv"
 	"strings"
 )
 
@@ -53,6 +54,17 @@ func populate(input SelectResult) interface{} {
 
 	if len(input.Childs) == 0 {
 		return input.Value
+	}
+
+	if _, err := strconv.Atoi(input.Childs[0].LocalIdentifier); err == nil { // is list
+		res := []interface{}{}
+		for _, child := range input.Childs {
+			val := populate(child)
+			if val != nil {
+				res = append(res, val)
+			}
+		}
+		return res
 	}
 
 	res := make(map[string]interface{})

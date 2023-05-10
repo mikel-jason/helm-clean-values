@@ -1,0 +1,13 @@
+affinity:
+  podAntiAffinity:
+    requiredDuringSchedulingIgnoredDuringExecution:
+      - name: one
+        topologyKey: aszasdf
+        labelSelector:
+          matchLabels:
+            k8s-app: asda
+      - name: two
+        topologyKey: aszasdfasdas
+        labelSelector:
+          matchLabels:
+            k8s-app: asda
